@@ -66,10 +66,24 @@ ARTISTS: dict[str, dict] = {
     "yuja_wang": {
         "name": "Yuja Wang",
         "url": "https://yujawang.com/calendar/",
+        # Filterable isotope grid (gw-gopf WordPress plugin)
+        "item_selector": ".gw-gopf-isotope-item",
+        "sub_selectors": {
+            "date":  ".event-date-wrap",
+            "title": ".event-title",
+            "venue": ".upcoming-venue",
+            "city":  ".upcoming-city",
+        },
     },
     "dudamel": {
         "name": "Gustavo Dudamel",
         "url": "https://www.gustavodudamel.com/schedule",
+        # Webflow dynamic list (schedule-list8 component)
+        "item_selector": ".schedule-list8_item",
+        "sub_selectors": {
+            "date":     ".schedule-list8_date-wrapper",
+            "location": ".schedule-location",
+        },
     },
 }
 
@@ -96,17 +110,42 @@ EUROPE_COUNTRY_NAMES: set[str] = {
     "kosovo",
 }
 
+# Major European cities for detection when only a city name appears (no country)
+EUROPE_CITY_NAMES: set[str] = {
+    "amsterdam", "antwerp", "athens", "barcelona", "berlin", "bern",
+    "bilbao", "bologna", "bordeaux", "bratislava", "brussels", "bucharest",
+    "budapest", "cologne", "copenhagen", "dresden", "dublin", "düsseldorf",
+    "edinburgh", "florence", "frankfurt", "geneva", "granada", "hamburg",
+    "helsinki", "istanbul", "krakow", "lausanne", "leipzig", "lisbon",
+    "ljubljana", "london", "luxembourg", "lyon", "madrid", "marseille",
+    "milan", "munich", "nice", "oslo", "paris", "prague", "reykjavik",
+    "riga", "rome", "rotterdam", "salzburg", "sarajevo", "seville",
+    "sofia", "stockholm", "strasbourg", "tallinn", "toulouse", "venice",
+    "vienna", "vilnius", "warsaw", "zagreb", "zurich",
+}
+
 
 # ---------------------------------------------------------------------------
 # European location detection
 # ---------------------------------------------------------------------------
 
-def is_european(country_code: str, country_name: str) -> bool:
-    """Return True if the location is in Europe."""
+def is_european(country_code: str, country_name: str, raw_text: str = "") -> bool:
+    """Return True if the location is in Europe.
+
+    Checks (in order):
+    1. ISO country code
+    2. Explicit country name in the structured fields
+    3. Full-text scan of raw_text for country and city names
+    """
     if country_code and country_code.upper() in EUROPE_COUNTRY_CODES:
         return True
-    if country_name and country_name.lower() in EUROPE_COUNTRY_NAMES:
-        return True
+    search = (country_name + " " + raw_text).lower()
+    for name in EUROPE_COUNTRY_NAMES:
+        if name in search:
+            return True
+    for city in EUROPE_CITY_NAMES:
+        if city in search:
+            return True
     return False
 
 
@@ -192,84 +231,112 @@ async def _extract_json_ld(page: Page) -> list[dict]:
     return concerts
 
 
-async def _extract_dom_events(page: Page, base_url: str) -> list[dict]:
+async def _extract_dom_events(page: Page, base_url: str, config: dict) -> list[dict]:
     """
-    Generic DOM extraction for official artist calendar pages.
-    Tries several common patterns used by Squarespace, WordPress/Tribe,
-    and custom CMS concert calendars.
+    Extract concert listings using artist-specific selectors from `config`,
+    with a generic fallback for unknown sites.
     """
     concerts: list[dict] = []
+    sub = config.get("sub_selectors", {})
 
-    # Ordered list of container selectors to try (most specific first)
-    container_selectors = [
-        # Squarespace event list
-        ".eventlist-event",
-        ".eventlist--upcoming .eventlist-event",
-        # WordPress / The Events Calendar (Tribe)
-        ".tribe-events-calendar-list__event",
-        ".tribe_events_list .tribe-event",
-        # Common generic patterns
-        "article[class*='event']",
-        "article[class*='concert']",
-        "div[class*='event-item']",
-        "div[class*='concert-item']",
-        "li[class*='event']",
-        "li[class*='concert']",
-        # Table rows (some sites use tables for tour dates)
-        "table tr",
-    ]
-
+    # --- resolve item elements ---
+    item_selector = config.get("item_selector", "")
     items = []
-    matched_selector = ""
-    for selector in container_selectors:
-        found = await page.query_selector_all(selector)
-        if found and len(found) > 1:  # >1 to skip lone header rows
-            items = found
-            matched_selector = selector
-            break
+    if item_selector:
+        items = await page.query_selector_all(item_selector)
+        print(f"    Selector '{item_selector}': {len(items)} item(s)")
 
-    print(f"    DOM selector '{matched_selector}': {len(items)} element(s)")
+    if not items:
+        # Generic fallback selectors
+        for sel in (
+            ".eventlist-event",
+            ".tribe-events-calendar-list__event",
+            "article[class*='event']",
+            "div[class*='event-item']",
+            "li[class*='event']",
+            "table tr",
+        ):
+            found = await page.query_selector_all(sel)
+            if len(found) > 1:
+                items = found
+                print(f"    Fallback selector '{sel}': {len(items)} item(s)")
+                break
 
-    for item in items:
+    if not items:
+        print("    No item elements found.")
+        return concerts
+
+    for idx, item in enumerate(items):
         try:
             full_text = (await item.inner_text()).strip()
             if not full_text or len(full_text) < 5:
                 continue
 
-            # --- date: prefer <time datetime="..."> ---
-            date_str = ""
-            time_el = await item.query_selector("time[datetime]")
-            if time_el:
-                dt = await time_el.get_attribute("datetime")
-                date_str = (dt or "")[:10]
-            if not date_str:
-                time_el = await item.query_selector("time")
-                if time_el:
-                    date_str = (await time_el.inner_text()).strip()
+            # Log the first item's text so we can verify parsing
+            if idx == 0:
+                print(f"    First item text: {full_text[:200]!r}")
 
-            # --- venue / location ---
+            # --- date ---
+            date_str = ""
+            if "date" in sub:
+                date_el = await item.query_selector(sub["date"])
+                if date_el:
+                    date_str = (await date_el.inner_text()).strip()
+            if not date_str:
+                time_el = await item.query_selector("time[datetime]")
+                if time_el:
+                    date_str = ((await time_el.get_attribute("datetime")) or "")[:10]
+                if not date_str:
+                    time_el = await item.query_selector("time")
+                    if time_el:
+                        date_str = (await time_el.inner_text()).strip()
+
+            # --- venue / city / country ---
             venue, city, country_name = "", "", ""
-            for loc_sel in [
-                ".eventlist-meta-address", ".tribe-venue", ".venue",
-                "[class*='venue']", "[class*='location']", "[class*='city']",
-            ]:
-                loc_el = await item.query_selector(loc_sel)
+
+            if "venue" in sub:
+                venue_el = await item.query_selector(sub["venue"])
+                if venue_el:
+                    venue = (await venue_el.inner_text()).strip()
+
+            if "city" in sub:
+                city_el = await item.query_selector(sub["city"])
+                if city_el:
+                    city_raw = (await city_el.inner_text()).strip()
+                    parts = [p.strip() for p in city_raw.split(",")]
+                    city = parts[0]
+                    country_name = parts[-1].lower() if len(parts) >= 2 else ""
+
+            if "location" in sub:
+                loc_el = await item.query_selector(sub["location"])
                 if loc_el:
                     loc_text = (await loc_el.inner_text()).strip()
                     parts = [p.strip() for p in loc_text.split(",")]
-                    venue = parts[0] if parts else ""
-                    city = parts[1] if len(parts) >= 2 else ""
-                    country_name = parts[-1].lower() if len(parts) >= 2 else ""
-                    break
+                    if not venue:
+                        venue = parts[0] if parts else ""
+                    if not city:
+                        city = parts[1] if len(parts) >= 2 else ""
+                    if not country_name:
+                        country_name = parts[-1].lower() if len(parts) >= 3 else ""
 
             # --- link ---
             a_el = await item.query_selector("a")
             href = (await a_el.get_attribute("href") or "") if a_el else ""
-            url = href if href.startswith("http") else (base_url.rstrip("/") + "/" + href.lstrip("/")) if href else base_url
+            url = (
+                href if href.startswith("http")
+                else (base_url.rstrip("/") + "/" + href.lstrip("/")) if href
+                else base_url
+            )
 
             # --- title ---
-            title_el = await item.query_selector("h1,h2,h3,h4,.title,[class*='title']")
-            title = (await title_el.inner_text()).strip() if title_el else full_text[:120]
+            title_str = ""
+            if "title" in sub:
+                title_el = await item.query_selector(sub["title"])
+                if title_el:
+                    title_str = (await title_el.inner_text()).strip()
+            if not title_str:
+                title_el = await item.query_selector("h1,h2,h3,h4,.title,[class*='title']")
+                title_str = (await title_el.inner_text()).strip() if title_el else full_text[:120]
 
             concerts.append(dict(
                 date=date_str,
@@ -277,20 +344,21 @@ async def _extract_dom_events(page: Page, base_url: str) -> list[dict]:
                 city=city,
                 country_code="",
                 country_name=country_name,
-                title=title,
+                title=title_str,
                 url=url,
-                raw_text=full_text[:300],  # kept for debugging
+                raw_text=full_text[:400],
             ))
         except Exception as exc:
-            print(f"    Warning: could not parse item: {exc}")
+            print(f"    Warning: could not parse item {idx}: {exc}")
 
     return concerts
 
 
-async def scrape_artist(url: str, artist_key: str) -> list[dict]:
+async def scrape_artist(url: str, artist_key: str, config: dict) -> list[dict]:
     """
     Load the official artist calendar page and extract concert listings.
-    Tries JSON-LD structured data first, then falls back to DOM parsing.
+    Tries JSON-LD structured data first, then falls back to DOM parsing
+    using selectors from `config`.
     """
     concerts: list[dict] = []
 
@@ -304,53 +372,16 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
         page = await context.new_page()
         try:
             print(f"  Loading {url} …")
-            # "load" fires when all resources finish; less strict than "networkidle"
-            # which never completes on pages with live analytics/polling.
+            # "load" is less strict than "networkidle" and works for sites
+            # with persistent background requests (analytics, polling, etc.)
             await page.goto(url, wait_until="load", timeout=45_000)
 
-            # Give JS-rendered calendars extra time to populate
+            # Extra wait for JS-rendered calendars to populate
             await page.wait_for_timeout(4000)
 
-            # --- diagnostics ---
+            # --- light diagnostics ---
             title = await page.title()
-            body_text = (await page.inner_text("body"))[:800].replace("\n", " ")
-            n_scripts = len(await page.query_selector_all('script[type="application/ld+json"]'))
-            n_li = len(await page.query_selector_all("li"))
-            n_article = len(await page.query_selector_all("article"))
-            print(f"  Page title   : {title}")
-            print(f"  Body preview : {body_text!r}")
-            print(f"  JSON-LD tags : {n_scripts} | <li>: {n_li} | <article>: {n_article}")
-
-            # Every individual CSS class token used on the page (to find event containers)
-            all_css_tokens = await page.evaluate("""() => {
-                const seen = new Set();
-                document.querySelectorAll('*').forEach(el => {
-                    const c = el.className;
-                    if (typeof c === 'string') {
-                        c.trim().split(/\s+/).forEach(t => { if (t) seen.add(t); });
-                    }
-                });
-                return [...seen].sort();
-            }""")
-            print(f"  All CSS tokens ({len(all_css_tokens)}): {all_css_tokens}")
-
-            # Find elements (div/li/article/section) whose text contains a month+year
-            # and have few children – these are likely individual event items
-            event_like = await page.evaluate("""() => {
-                const re = /\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?\\s+\\d{1,2}|\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{1,2}/i;
-                const candidates = [...document.querySelectorAll('div,li,article,section,tr')];
-                return candidates
-                    .filter(el => el.children.length <= 6 && re.test(el.textContent))
-                    .slice(0, 5)
-                    .map(el => ({
-                        tag: el.tagName,
-                        cls: el.className,
-                        parentTag: el.parentElement ? el.parentElement.tagName : '',
-                        parentCls: el.parentElement ? el.parentElement.className : '',
-                        text: el.textContent.trim().replace(/\s+/g,' ').slice(0, 200)
-                    }));
-            }""")
-            print(f"  Event-like elements: {event_like}")
+            print(f"  Page title: {title}")
 
             # Strategy 1 – JSON-LD structured data (most reliable when present)
             json_ld = await _extract_json_ld(page)
@@ -358,8 +389,8 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
             if json_ld:
                 concerts = json_ld
             else:
-                # Strategy 2 – generic DOM parsing
-                concerts = await _extract_dom_events(page, url)
+                # Strategy 2 – artist-specific DOM parsing
+                concerts = await _extract_dom_events(page, url, config)
 
         except Exception as exc:
             print(f"  ERROR scraping {artist_key}: {exc}")
@@ -385,12 +416,16 @@ async def check_all() -> tuple[list[dict], bool]:
         print(f"\nChecking {info['name']} …")
         artist_state: dict = state.setdefault(artist_key, {})
 
-        concerts = await scrape_artist(info["url"], artist_key)
+        concerts = await scrape_artist(info["url"], artist_key, info)
         print(f"  Total concerts found: {len(concerts)}")
 
         european = [
             c for c in concerts
-            if is_european(c.get("country_code", ""), c.get("country_name", ""))
+            if is_european(
+                c.get("country_code", ""),
+                c.get("country_name", ""),
+                c.get("raw_text", ""),
+            )
         ]
         print(f"  European concerts: {len(european)}")
 
