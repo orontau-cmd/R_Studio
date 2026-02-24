@@ -281,7 +281,7 @@ async def _extract_dom_events(page: Page, base_url: str, config: dict) -> list[d
             if "date" in sub:
                 date_el = await item.query_selector(sub["date"])
                 if date_el:
-                    date_str = (await date_el.inner_text()).strip()
+                    date_str = (await date_el.inner_text()).strip().split("\n")[0].strip()
             if not date_str:
                 time_el = await item.query_selector("time[datetime]")
                 if time_el:
