@@ -297,8 +297,11 @@ async def do_login(page: Page) -> bool:
         print("  ERROR: could not find submit button.")
         return False
 
-    # Give the site a moment to send the SMS
+    # Give the site a moment to process the submission
     await page.wait_for_timeout(2_000)
+
+    # ── Step 3b: answer pre-appointment questions if they appear ──────────
+    await answer_pre_appointment_questions(page)
 
     # ── Step 4: ask user for OTP via Telegram ─────────────────────────────
     tg_send(
@@ -353,6 +356,80 @@ async def do_login(page: Page) -> bool:
 
     print(f"  Logged in. URL: {page.url}")
     return True
+
+
+# ---------------------------------------------------------------------------
+# Pre-appointment questionnaire (answered automatically after ID submission)
+# ---------------------------------------------------------------------------
+
+async def answer_pre_appointment_questions(page: Page) -> None:
+    """
+    After submitting phone + ID, govisit.gov.il shows up to three questions
+    before sending the OTP.  This function detects and answers them:
+
+      Q1. Are any changes required to personal details?  → No changes
+      Q2. Which document would you like to renew?        → Passport
+      Q3. What is the reason for renewing your passport? → About to Expire
+
+    Runs in a loop until no matching question is found on the page.
+    """
+    QUESTIONS = [
+        (
+            ["שינויים בפרטים", "שינויים הנדרשים", "personal details",
+             "identity card supplement", "פרטים אישיים"],
+            ["אין שינויים", "No changes"],
+        ),
+        (
+            ["מסמך ברצונך לחדש", "איזה מסמך", "Which document",
+             "document would you like"],
+            ["דרכון", "Passport"],
+        ),
+        (
+            ["סיבה לחידוש", "reason for renewing", "סיבת החידוש",
+             "renew your passport", "עומד לפוג תוקף"],
+            ["עומד לפוג", "About to Expire", "פג תוקף"],
+        ),
+    ]
+    continue_selectors = [
+        "button:has-text('המשך')",
+        "button:has-text('הבא')",
+        "button:has-text('אישור')",
+        "button[type='submit']",
+        "button:has-text('Continue')",
+        "button:has-text('Next')",
+    ]
+
+    for _attempt in range(8):  # up to 8 rounds covers 3 questions with retries
+        await page.wait_for_timeout(1_500)
+        body_text = (await page.inner_text("body")).lower()
+
+        answered_this_round = False
+        for q_keywords, a_options in QUESTIONS:
+            if not any(kw.lower() in body_text for kw in q_keywords):
+                continue
+            for answer in a_options:
+                try:
+                    el = await page.query_selector(
+                        f"button:has-text('{answer}'), "
+                        f"label:has-text('{answer}'), "
+                        f"[role='radio']:has-text('{answer}'), "
+                        f"[class*='option']:has-text('{answer}')"
+                    )
+                    if el and await el.is_visible():
+                        await el.click()
+                        print(f"  Pre-question answered → '{answer}'")
+                        answered_this_round = True
+                        await page.wait_for_timeout(600)
+                        break
+                except Exception:
+                    continue
+
+        if not answered_this_round:
+            break  # no more questions on the page
+
+        # Advance to the next step / question
+        await _click_first_match(page, continue_selectors)
+        await page.wait_for_timeout(1_500)
 
 
 # ---------------------------------------------------------------------------
@@ -475,6 +552,7 @@ async def run() -> None:
             )
             page = await context.new_page()
             await page.goto(APPOINTMENT_URL, wait_until="networkidle", timeout=45_000)
+            await answer_pre_appointment_questions(page)
 
             if not await is_session_valid(page):
                 print("Cached session has expired.")
@@ -502,6 +580,7 @@ async def run() -> None:
             # Navigate to appointment page after fresh login
             print(f"  Navigating to appointment page…")
             await page.goto(APPOINTMENT_URL, wait_until="networkidle", timeout=45_000)
+            await answer_pre_appointment_questions(page)
 
             # Save new session
             new_session = await context.storage_state()
