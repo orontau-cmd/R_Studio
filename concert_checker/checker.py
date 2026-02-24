@@ -5,7 +5,7 @@ Concert alert service – Yuja Wang & Gustavo Dudamel (European concerts).
 How it works
 ============
 1. Loads known_concerts.json (previously seen concerts).
-2. Scrapes Songkick calendar pages via headless Chromium (Playwright).
+2. Scrapes the official artist websites via headless Chromium (Playwright).
 3. Filters concerts whose location is in Europe.
 4. Sends an email to oronroi@gmail.com for every NEW concert found.
 5. Writes the updated state back to known_concerts.json.
@@ -48,11 +48,11 @@ GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 ARTISTS: dict[str, dict] = {
     "yuja_wang": {
         "name": "Yuja Wang",
-        "songkick_url": "https://www.songkick.com/artists/333894-yuja-wang/calendar",
+        "url": "https://yujawang.com/calendar/",
     },
     "dudamel": {
         "name": "Gustavo Dudamel",
-        "songkick_url": "https://www.songkick.com/artists/580721-gustavo-dudamel/calendar",
+        "url": "https://www.gustavodudamel.com/schedule",
     },
 }
 
@@ -175,126 +175,141 @@ async def _extract_json_ld(page: Page) -> list[dict]:
     return concerts
 
 
-async def _extract_songkick_dom(page: Page) -> list[dict]:
+async def _extract_dom_events(page: Page, base_url: str) -> list[dict]:
     """
-    Parse Songkick's event-listing DOM.
-
-    Songkick renders a <ul class="event-listings"> where each <li> contains:
-      - <time class="event-listing-datetime"> for the date
-      - <p class="event-listing-venue-location"> for "Venue, City, Country"
-      - <a class="event-listing-title"> or a link in the <p class="summary">
+    Generic DOM extraction for official artist calendar pages.
+    Tries several common patterns used by Squarespace, WordPress/Tribe,
+    and custom CMS concert calendars.
     """
     concerts: list[dict] = []
 
-    # Collect all event list items
-    items = await page.query_selector_all("li.event-listings-element")
-    if not items:
-        # Fallback: any <li> inside .event-listings
-        items = await page.query_selector_all(".event-listings li")
-    if not items:
-        # Broader fallback
-        items = await page.query_selector_all("li[class*='event']")
+    # Ordered list of container selectors to try (most specific first)
+    container_selectors = [
+        # Squarespace event list
+        ".eventlist-event",
+        ".eventlist--upcoming .eventlist-event",
+        # WordPress / The Events Calendar (Tribe)
+        ".tribe-events-calendar-list__event",
+        ".tribe_events_list .tribe-event",
+        # Common generic patterns
+        "article[class*='event']",
+        "article[class*='concert']",
+        "div[class*='event-item']",
+        "div[class*='concert-item']",
+        "li[class*='event']",
+        "li[class*='concert']",
+        # Table rows (some sites use tables for tour dates)
+        "table tr",
+    ]
 
-    print(f"    DOM: found {len(items)} event element(s)")
+    items = []
+    matched_selector = ""
+    for selector in container_selectors:
+        found = await page.query_selector_all(selector)
+        if found and len(found) > 1:  # >1 to skip lone header rows
+            items = found
+            matched_selector = selector
+            break
+
+    print(f"    DOM selector '{matched_selector}': {len(items)} element(s)")
 
     for item in items:
         try:
-            # --- date ---
-            time_el = await item.query_selector("time")
+            full_text = (await item.inner_text()).strip()
+            if not full_text or len(full_text) < 5:
+                continue
+
+            # --- date: prefer <time datetime="..."> ---
             date_str = ""
+            time_el = await item.query_selector("time[datetime]")
             if time_el:
-                dt_attr = await time_el.get_attribute("datetime")
-                date_str = (dt_attr or "")[:10]
-                if not date_str:
+                dt = await time_el.get_attribute("datetime")
+                date_str = (dt or "")[:10]
+            if not date_str:
+                time_el = await item.query_selector("time")
+                if time_el:
                     date_str = (await time_el.inner_text()).strip()
 
-            # --- location text (Songkick format: "Venue, City, Country") ---
-            loc_el = await item.query_selector(
-                "p.event-listing-venue-location, .location, [class*='location']"
-            )
-            location_text = (await loc_el.inner_text()).strip() if loc_el else ""
+            # --- venue / location ---
+            venue, city, country_name = "", "", ""
+            for loc_sel in [
+                ".eventlist-meta-address", ".tribe-venue", ".venue",
+                "[class*='venue']", "[class*='location']", "[class*='city']",
+            ]:
+                loc_el = await item.query_selector(loc_sel)
+                if loc_el:
+                    loc_text = (await loc_el.inner_text()).strip()
+                    parts = [p.strip() for p in loc_text.split(",")]
+                    venue = parts[0] if parts else ""
+                    city = parts[1] if len(parts) >= 2 else ""
+                    country_name = parts[-1].lower() if len(parts) >= 2 else ""
+                    break
 
-            # --- title / link ---
+            # --- link ---
             a_el = await item.query_selector("a")
             href = (await a_el.get_attribute("href") or "") if a_el else ""
-            title_el = await item.query_selector(
-                ".event-listing-title, .summary, h3, h4"
-            )
-            title = (await title_el.inner_text()).strip() if title_el else ""
+            url = href if href.startswith("http") else (base_url.rstrip("/") + "/" + href.lstrip("/")) if href else base_url
 
-            # Parse "Venue, City, Country" from location_text
-            parts = [p.strip() for p in location_text.split(",")]
-            venue = parts[0] if len(parts) >= 1 else ""
-            city = parts[1] if len(parts) >= 2 else ""
-            country_name = parts[-1].lower() if len(parts) >= 3 else parts[-1].lower() if parts else ""
+            # --- title ---
+            title_el = await item.query_selector("h1,h2,h3,h4,.title,[class*='title']")
+            title = (await title_el.inner_text()).strip() if title_el else full_text[:120]
 
-            url = f"https://www.songkick.com{href}" if href.startswith("/") else href
-
-            concerts.append(
-                dict(
-                    date=date_str,
-                    venue=venue,
-                    city=city,
-                    country_code="",
-                    country_name=country_name,
-                    title=title or location_text[:120],
-                    url=url,
-                )
-            )
+            concerts.append(dict(
+                date=date_str,
+                venue=venue,
+                city=city,
+                country_code="",
+                country_name=country_name,
+                title=title,
+                url=url,
+                raw_text=full_text[:300],  # kept for debugging
+            ))
         except Exception as exc:
-            print(f"    Warning: could not parse event item: {exc}")
+            print(f"    Warning: could not parse item: {exc}")
 
     return concerts
 
 
 async def scrape_artist(url: str, artist_key: str) -> list[dict]:
     """
-    Return ALL concerts listed on the Songkick calendar page for one artist.
-    Tries JSON-LD first, falls back to DOM parsing.
+    Load the official artist calendar page and extract concert listings.
+    Tries JSON-LD structured data first, then falls back to DOM parsing.
     """
     concerts: list[dict] = []
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
-        page = await browser.new_page(user_agent=_BROWSER_UA)
+        context = await browser.new_context(
+            user_agent=_BROWSER_UA,
+            locale="en-US",
+            viewport={"width": 1280, "height": 800},
+        )
+        page = await context.new_page()
         try:
             print(f"  Loading {url} …")
             await page.goto(url, wait_until="networkidle", timeout=45_000)
 
+            # Give JS-rendered calendars extra time to populate
+            await page.wait_for_timeout(3000)
+
             # --- diagnostics ---
             title = await page.title()
-            body_text = (await page.inner_text("body"))[:600].replace("\n", " ")
+            body_text = (await page.inner_text("body"))[:800].replace("\n", " ")
             n_scripts = len(await page.query_selector_all('script[type="application/ld+json"]'))
             n_li = len(await page.query_selector_all("li"))
-            print(f"  Page title : {title}")
-            print(f"  Body text  : {body_text!r}")
-            print(f"  JSON-LD tags: {n_scripts}  |  <li> elements: {n_li}")
+            n_article = len(await page.query_selector_all("article"))
+            print(f"  Page title   : {title}")
+            print(f"  Body preview : {body_text!r}")
+            print(f"  JSON-LD tags : {n_scripts} | <li>: {n_li} | <article>: {n_article}")
 
-            # Strategy 1 – JSON-LD structured data
+            # Strategy 1 – JSON-LD structured data (most reliable when present)
             json_ld = await _extract_json_ld(page)
-            print(f"  JSON-LD: found {len(json_ld)} event(s)")
+            print(f"  JSON-LD events found: {len(json_ld)}")
             if json_ld:
                 concerts = json_ld
             else:
-                # Strategy 2 – Songkick DOM parsing
-                concerts = await _extract_songkick_dom(page)
-
-            # --- handle pagination: follow "next" link if present ---
-            next_link = await page.query_selector("a[rel='next'], a.next_page, a[class*='next']")
-            if next_link and len(concerts) > 0:
-                next_href = await next_link.get_attribute("href")
-                if next_href:
-                    next_url = (
-                        f"https://www.songkick.com{next_href}"
-                        if next_href.startswith("/")
-                        else next_href
-                    )
-                    print(f"  Following next page: {next_url}")
-                    await page.goto(next_url, wait_until="networkidle", timeout=45_000)
-                    extra = await _extract_json_ld(page)
-                    if not extra:
-                        extra = await _extract_songkick_dom(page)
-                    concerts.extend(extra)
+                # Strategy 2 – generic DOM parsing
+                concerts = await _extract_dom_events(page, url)
 
         except Exception as exc:
             print(f"  ERROR scraping {artist_key}: {exc}")
@@ -320,7 +335,7 @@ async def check_all() -> tuple[list[dict], bool]:
         print(f"\nChecking {info['name']} …")
         artist_state: dict = state.setdefault(artist_key, {})
 
-        concerts = await scrape_artist(info["songkick_url"], artist_key)
+        concerts = await scrape_artist(info["url"], artist_key)
         print(f"  Total concerts found: {len(concerts)}")
 
         european = [
