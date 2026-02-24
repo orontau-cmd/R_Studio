@@ -304,10 +304,12 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
         page = await context.new_page()
         try:
             print(f"  Loading {url} …")
-            await page.goto(url, wait_until="networkidle", timeout=45_000)
+            # "load" fires when all resources finish; less strict than "networkidle"
+            # which never completes on pages with live analytics/polling.
+            await page.goto(url, wait_until="load", timeout=45_000)
 
             # Give JS-rendered calendars extra time to populate
-            await page.wait_for_timeout(3000)
+            await page.wait_for_timeout(4000)
 
             # --- diagnostics ---
             title = await page.title()
@@ -315,9 +317,15 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
             n_scripts = len(await page.query_selector_all('script[type="application/ld+json"]'))
             n_li = len(await page.query_selector_all("li"))
             n_article = len(await page.query_selector_all("article"))
+            # Dump unique <li> class names to find the right selector
+            li_classes = await page.eval_on_selector_all(
+                "li",
+                "els => [...new Set(els.map(e => e.className).filter(c => c))].slice(0, 30)"
+            )
             print(f"  Page title   : {title}")
             print(f"  Body preview : {body_text!r}")
             print(f"  JSON-LD tags : {n_scripts} | <li>: {n_li} | <article>: {n_article}")
+            print(f"  <li> classes : {li_classes}")
 
             # Strategy 1 – JSON-LD structured data (most reliable when present)
             json_ld = await _extract_json_ld(page)
