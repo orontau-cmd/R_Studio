@@ -261,6 +261,15 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
             print(f"  Loading {url} …")
             await page.goto(url, wait_until="networkidle", timeout=45_000)
 
+            # --- diagnostics ---
+            title = await page.title()
+            body_text = (await page.inner_text("body"))[:600].replace("\n", " ")
+            n_scripts = len(await page.query_selector_all('script[type="application/ld+json"]'))
+            n_li = len(await page.query_selector_all("li"))
+            print(f"  Page title : {title}")
+            print(f"  Body text  : {body_text!r}")
+            print(f"  JSON-LD tags: {n_scripts}  |  <li> elements: {n_li}")
+
             # Strategy 1 – JSON-LD structured data
             json_ld = await _extract_json_ld(page)
             print(f"  JSON-LD: found {len(json_ld)} event(s)")
