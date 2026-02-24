@@ -83,7 +83,7 @@ jobs:
           PASSPORT_ID: ${{ secrets.PASSPORT_ID }}
           APPOINTMENT_URL: ${{ secrets.APPOINTMENT_URL }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          PASSPORT_GMAIL_APP_PASSWORD: ${{ secrets.PASSPORT_GMAIL_APP_PASSWORD }}
         run: python passport_checker/checker.py
 
       # -----------------------------------------------------------------------

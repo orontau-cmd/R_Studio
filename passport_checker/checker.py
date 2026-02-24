@@ -16,7 +16,7 @@ Go to: Repository → Settings → Secrets and variables → Actions
                         (log in manually once in your browser, navigate to the
                         calendar, and copy the URL from the address bar)
   GMAIL_USER          – optional, e.g. youraddress@gmail.com
-  GMAIL_APP_PASSWORD  – optional, 16-char Google App Password
+  PASSPORT_GMAIL_APP_PASSWORD – optional, 16-char Google App Password
 
 HOW IT WORKS
 ============
@@ -63,7 +63,7 @@ APPOINTMENT_URL = os.environ.get("APPOINTMENT_URL", "")
 
 NOTIFY_EMAIL = "oronroi@gmail.com"
 GMAIL_USER = os.environ.get("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+GMAIL_APP_PASSWORD = os.environ.get("PASSPORT_GMAIL_APP_PASSWORD", "")
 
 OTP_WAIT_SECONDS = 300   # 5 minutes to reply in Telegram
 RE_ALERT_HOURS = 4       # don't re-alert for the same slot within this window
