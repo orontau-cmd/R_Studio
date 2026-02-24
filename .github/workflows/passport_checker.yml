@@ -1,0 +1,115 @@
+name: Passport Appointment Checker
+
+# 07:00 Israel Standard Time  = 05:00 UTC  (UTC+2, winter)
+# 07:00 Israel Daylight Time  = 04:00 UTC  (UTC+3, summer)
+# Running at both to cover the DST switch; GitHub deduplicates same-day runs.
+# NOTE: Scheduled workflows only run from the DEFAULT branch (main/master).
+#       Merge this PR to main to activate the cron.
+#       Manual runs work on any branch via the "Run workflow" button.
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 07:00 IDT  (summer, UTC+3)
+    - cron: "0 5 * * *"   # 07:00 IST  (winter, UTC+2)
+  workflow_dispatch:        # manual trigger for testing
+
+permissions:
+  contents: write           # needed to commit known_slots.json
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 2. Python setup
+      # -----------------------------------------------------------------------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: passport_checker/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r passport_checker/requirements.txt
+
+      # -----------------------------------------------------------------------
+      # 3. Playwright (headless Chromium)
+      # -----------------------------------------------------------------------
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      # -----------------------------------------------------------------------
+      # 4. Restore cached login session
+      #    Cache key rotates each run so the updated session is always saved.
+      #    restore-keys: picks up the latest saved session from any prior run.
+      # -----------------------------------------------------------------------
+      - name: Restore login session cache
+        id: session-cache
+        uses: actions/cache@v4
+        with:
+          path: passport_checker/session.json
+          key: passport-session-${{ github.run_id }}
+          restore-keys: |
+            passport-session-
+
+      - name: Session cache status
+        run: |
+          if [ -f passport_checker/session.json ]; then
+            echo "Cached session found – will attempt reuse (no SMS needed)."
+          else
+            echo "No cached session – will trigger SMS login via Telegram."
+          fi
+
+      # -----------------------------------------------------------------------
+      # 5. Run the checker
+      #    On first run (no cache): logs in via SMS + Telegram OTP, saves session.
+      #    On subsequent runs: reuses cached session, no SMS required.
+      # -----------------------------------------------------------------------
+      - name: Run passport checker
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PASSPORT_PHONE: ${{ secrets.PASSPORT_PHONE }}
+          PASSPORT_ID: ${{ secrets.PASSPORT_ID }}
+          APPOINTMENT_URL: ${{ secrets.APPOINTMENT_URL }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          PASSPORT_GMAIL_APP_PASSWORD: ${{ secrets.PASSPORT_GMAIL_APP_PASSWORD }}
+        run: python passport_checker/checker.py
+
+      # -----------------------------------------------------------------------
+      # 6. Upload debug screenshot (always, even on failure)
+      # -----------------------------------------------------------------------
+      - name: Upload debug screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: passport-check-screenshot-${{ github.run_id }}
+          path: passport_checker/last_check.png
+          retention-days: 5
+          if-no-files-found: ignore
+
+      # -----------------------------------------------------------------------
+      # 7. Commit updated slot state (to track which slots were already alerted)
+      # -----------------------------------------------------------------------
+      - name: Commit updated slot state
+        if: always()
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add passport_checker/known_slots.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "chore: update passport slot state [skip ci]"
+            git push origin ${{ github.ref_name }}
+          fi
