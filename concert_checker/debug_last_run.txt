@@ -1,0 +1,26 @@
+=== Concert Notification Service ===
+Run time: 2026-02-24T12:28:29.195283+00:00
+
+
+Checking Yuja Wang …
+  Loading https://yujawang.com/calendar/ …
+  Page title   : Yuja Wang: Concert Calendar Schedule
+  Body preview : 'Skip to content THE LATEST CALENDAR ABOUT PRESS LISTEN SELECT MONTH ALL DECEMBER 2015 JANUARY 2016 FEBRUARY 2016 MARCH 2016 APRIL 2016 MAY 2016 JUNE 2016 JULY 2016 AUGUST 2016 SEPTEMBER 2016 OCTOBER 2016 NOVEMBER 2016 DECEMBER 2016 JANUARY 2017 FEBRUARY 2017 MARCH 2017 APRIL 2017 MAY 2017 JUNE 2017 JULY 2017 AUGUST 2017 SEPTEMBER 2017 OCTOBER 2017 NOVEMBER 2017 DECEMBER 2017 JANUARY 2018 FEBRUARY 2018 MARCH 2018 APRIL 2018 MAY 2018 JUNE 2018 JULY 2018 AUGUST 2018 SEPTEMBER 2018 OCTOBER 2018 NOVEMBER 2018 DECEMBER 2018 FEBRUARY 2019 APRIL 2019 MAY 2019 JANUARY 2019 MARCH 2019 SEPTEMBER 2019 JUNE 2019 FEBRUARY 2020 JUNE 2020 NOVEMBER 2019 JULY 2019 JANUARY 2020 MARCH 2020 MAY 2020 DECEMBER 2019 AUGUST 2019 OCTOBER 2019 APRIL 2020 JULY 2020 MARCH 2021 JANUARY 2021 FEBRUARY 2021 AUGUST 2020 SE'
+  JSON-LD tags : 1 | <li>: 158 | <article>: 0
+  JSON-LD events found: 0
+    DOM selector '': 0 element(s)
+  Total concerts found: 0
+  European concerts: 0
+
+Checking Gustavo Dudamel …
+  Loading https://www.gustavodudamel.com/schedule …
+  ERROR scraping dudamel: Page.goto: Timeout 45000ms exceeded.
+Call log:
+  - navigating to "https://www.gustavodudamel.com/schedule", waiting until "networkidle"
+
+  Total concerts found: 0
+  European concerts: 0
+
+No new European concerts found. No email sent.
+
+Done.
