@@ -27,6 +27,7 @@ import hashlib
 import json
 import os
 import smtplib
+import sys
 from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -40,6 +41,22 @@ from playwright.async_api import async_playwright, Page
 
 SCRIPT_DIR = Path(__file__).parent
 STATE_FILE = SCRIPT_DIR / "known_concerts.json"
+DEBUG_FILE = SCRIPT_DIR / "debug_last_run.txt"
+
+
+class Tee:
+    """Write to both stdout and a file simultaneously."""
+    def __init__(self, path: Path):
+        self._file = open(path, "w", encoding="utf-8")
+        self._stdout = sys.stdout
+    def write(self, data):
+        self._stdout.write(data)
+        self._file.write(data)
+    def flush(self):
+        self._stdout.flush()
+        self._file.flush()
+    def close(self):
+        self._file.close()
 
 NOTIFY_EMAIL = "oronroi@gmail.com"
 GMAIL_USER = os.environ.get("GMAIL_USER", "")
@@ -472,4 +489,10 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    tee = Tee(DEBUG_FILE)
+    sys.stdout = tee
+    try:
+        asyncio.run(main())
+    finally:
+        sys.stdout = tee._stdout
+        tee.close()
