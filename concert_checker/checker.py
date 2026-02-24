@@ -317,15 +317,40 @@ async def scrape_artist(url: str, artist_key: str) -> list[dict]:
             n_scripts = len(await page.query_selector_all('script[type="application/ld+json"]'))
             n_li = len(await page.query_selector_all("li"))
             n_article = len(await page.query_selector_all("article"))
-            # Dump unique <li> class names to find the right selector
-            li_classes = await page.eval_on_selector_all(
-                "li",
-                "els => [...new Set(els.map(e => e.className).filter(c => c))].slice(0, 30)"
-            )
             print(f"  Page title   : {title}")
             print(f"  Body preview : {body_text!r}")
             print(f"  JSON-LD tags : {n_scripts} | <li>: {n_li} | <article>: {n_article}")
-            print(f"  <li> classes : {li_classes}")
+
+            # Every individual CSS class token used on the page (to find event containers)
+            all_css_tokens = await page.evaluate("""() => {
+                const seen = new Set();
+                document.querySelectorAll('*').forEach(el => {
+                    const c = el.className;
+                    if (typeof c === 'string') {
+                        c.trim().split(/\s+/).forEach(t => { if (t) seen.add(t); });
+                    }
+                });
+                return [...seen].sort();
+            }""")
+            print(f"  All CSS tokens ({len(all_css_tokens)}): {all_css_tokens}")
+
+            # Find elements (div/li/article/section) whose text contains a month+year
+            # and have few children – these are likely individual event items
+            event_like = await page.evaluate("""() => {
+                const re = /\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?\\s+\\d{1,2}|\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{1,2}/i;
+                const candidates = [...document.querySelectorAll('div,li,article,section,tr')];
+                return candidates
+                    .filter(el => el.children.length <= 6 && re.test(el.textContent))
+                    .slice(0, 5)
+                    .map(el => ({
+                        tag: el.tagName,
+                        cls: el.className,
+                        parentTag: el.parentElement ? el.parentElement.tagName : '',
+                        parentCls: el.parentElement ? el.parentElement.className : '',
+                        text: el.textContent.trim().replace(/\s+/g,' ').slice(0, 200)
+                    }));
+            }""")
+            print(f"  Event-like elements: {event_like}")
 
             # Strategy 1 – JSON-LD structured data (most reliable when present)
             json_ld = await _extract_json_ld(page)
