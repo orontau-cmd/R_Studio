@@ -1,0 +1,125 @@
+=== Concert Notification Service ===
+Run time: 2026-02-24T12:55:31.622482+00:00
+
+
+Checking Yuja Wang …
+  Loading https://yujawang.com/calendar/ …
+  Page title: Yuja Wang: Concert Calendar Schedule
+  JSON-LD events found: 0
+    Selector '.gw-gopf-isotope-item': 22 item(s)
+    First item text: 'March 1, 2026\nBarbican Center\nLondon Symphony Orchestra\nLondon, United Kingdom\nTarmo Peltokoski, conductor\n\nRAUTAVAARA: Piano Concerto No. 1\nTICKETS'
+  Total concerts found: 22
+  European concerts: 10
+  NEW: March 1, 2026
+Barbican Center
+London Symphony Orchestra
+London, United Kingdom
+Tarmo Peltokoski, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+TICKETS | Barbican Center, London
+  NEW: March 5 - 7, 2026
+Santa Cecilia Hall
+The Orchestra dell’Accademia Nazionale di Santa Cecilia
+Rome, Italy
+Teodor Currentzis, conductor
+
+PROKOFIEV: Piano Concerto No. 2
+TICKETS | Santa Cecilia Hall, Rome
+  NEW: March 12 - 13, 2026
+Berwaldhallen
+Swedish Radio Symphony Orchestra
+Stockholm, Sweden
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+TICKETS | Berwaldhallen, Stockholm
+  NEW: March, 15, 2026
+Philharmonie
+Swedish Radio Symphony Orchestra
+Köln, Germany
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concert No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+TICKETS | Philharmonie, Köln
+  NEW: March 16, 2026
+Elbphilharmonie
+Swedish Radio Symphony Orchestra
+Hamburg, Germany
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+
+TICKETS | Elbphilharmonie, Hamburg
+  NEW: March 17, 2026
+Concertgebouw
+Swedish Radio Symphony Orchestra
+Amsterdam, Niederlande
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concert No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+TICKETS | Concertgebouw, Amsterdam
+  NEW: March 19, 2026
+Berliner Philharmonie
+Swedish Radio Symphony Orchestra
+Berlin, Germany
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+
+TICKETS | Berliner Philharmonie, Berlin
+  NEW: March 20, 2026
+Bozar
+Swedish Radio Symphony Orchestra
+Brussels, Belgium
+Esa-Pekka Salonen, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+
+RAVEL: Piano Concerto for the Left Hand
+
+TICKETS | Bozar, Brussels
+  NEW: April 23, 2026
+Granada Theatre
+Mahler Chamber Orchestra
+Santa Barbara, CA, United States
+Yuja Wang, piano and leader
+
+CHOPIN: Piano Concerto No. 1
+
+PROKOFIEV: Piano Concerto No. 2
+TICKETS | Granada Theatre, Santa Barbara
+  NEW: May 23 -24, 2026
+Philharmonie am Gasteig
+Münchner Philharmoniker
+Munich , Germany
+Tarmo Peltokoski, conductor
+
+RAUTAVAARA: Piano Concerto No. 1
+
+TICKETS | Philharmonie am Gasteig, Munich
+
+Checking Gustavo Dudamel …
+  Loading https://www.gustavodudamel.com/schedule …
+  Page title: Schedule
+  JSON-LD events found: 0
+    Selector '.schedule-list8_item': 20 item(s)
+    First item text: 'FEBRUARY 26-28 & MARCH 1, 2026\nLos Angeles Philharmonic\n\nWalt Disney Concert Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 7\n\n\u200d\n\nORTIZ\n\nRevolución Diamentina (LA Phil Commission)\n\n\u200d\n\nGrupo Corpo\n\nCassi Abra'
+  Total concerts found: 20
+  European concerts: 1
+  NEW: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
+
+Found 11 new European concert(s). Sending email…
+Email sent → oronroi@gmail.com
+
+Done.

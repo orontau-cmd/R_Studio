@@ -1,0 +1,73 @@
+name: Concert Notification Checker
+
+# Runs every day at 08:00 UTC.
+# NOTE: GitHub only runs scheduled workflows from the DEFAULT branch (main/master).
+# After reviewing this PR, merge it to main so the daily cron activates.
+# You can also trigger a manual run any time via:
+#   GitHub → Actions → Concert Notification Checker → Run workflow
+on:
+  schedule:
+    - cron: "0 8 * * *"   # 08:00 UTC daily
+  workflow_dispatch:        # manual trigger (works on any branch)
+
+permissions:
+  contents: write           # needed to commit known_concerts.json back
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Always run against main once merged; the ref below is a safe default
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # 2. Python setup
+      # -----------------------------------------------------------------------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: concert_checker/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r concert_checker/requirements.txt
+
+      # -----------------------------------------------------------------------
+      # 3. Playwright (headless Chromium)
+      # -----------------------------------------------------------------------
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      # -----------------------------------------------------------------------
+      # 4. Run the checker
+      # -----------------------------------------------------------------------
+      - name: Run concert checker
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python concert_checker/checker.py
+
+      # -----------------------------------------------------------------------
+      # 5. Commit updated state back to the repo
+      #    The [skip ci] tag prevents this commit from re-triggering the workflow.
+      # -----------------------------------------------------------------------
+      - name: Commit updated concert state
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add concert_checker/known_concerts.json concert_checker/debug_last_run.txt
+          if git diff --staged --quiet; then
+            echo "No changes to known_concerts.json – nothing to commit."
+          else
+            git commit -m "chore: update known concerts state [skip ci]"
+            git push origin ${{ github.ref_name }}
+          fi
