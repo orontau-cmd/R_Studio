@@ -99,6 +99,96 @@
       "country_name": "germany",
       "url": "https://tickets.muenchenticket.de/shop/142/link/event/432328?language=2",
       "detected_at": "2026-02-24T12:55:39.235377+00:00"
+    },
+    "3e43e3071f8ea13cf52c": {
+      "date": "March 5 - 7, 2026",
+      "title": "The Orchestra dell’Accademia Nazionale di Santa Cecilia",
+      "venue": "Santa Cecilia Hall",
+      "city": "Rome",
+      "country_code": "",
+      "country_name": "italy",
+      "url": "https://santacecilia.it/en/concerto/teodor-currentzis/",
+      "detected_at": "2026-03-07T09:08:11.561886+00:00"
+    },
+    "02664572b6bd70c754ca": {
+      "date": "March 12 - 13, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Berwaldhallen",
+      "city": "Stockholm",
+      "country_code": "",
+      "country_name": "sweden",
+      "url": "https://www.berwaldhallen.se/en/concert/salonen-wang-x-2",
+      "detected_at": "2026-03-07T09:08:11.561907+00:00"
+    },
+    "5027dc74ea1fe4c4f396": {
+      "date": "March, 15, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Philharmonie",
+      "city": "Köln",
+      "country_code": "",
+      "country_name": "germany",
+      "url": "https://www.koelner-philharmonie.de/en/events/yuja-wang-swedish-radio-symphony-orchestra-esa-pekka-salonen/4624",
+      "detected_at": "2026-03-07T09:08:11.561917+00:00"
+    },
+    "56a07ef45a275b176934": {
+      "date": "March 16, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Elbphilharmonie",
+      "city": "Hamburg",
+      "country_code": "",
+      "country_name": "germany",
+      "url": "https://www.elbphilharmonie.de/en/whats-on/swedish-radio-symphony-orchestra-yuja-wang-esa-pekka-salonen/23473",
+      "detected_at": "2026-03-07T09:08:11.561923+00:00"
+    },
+    "ae135e9bd74c8b2da428": {
+      "date": "March 17, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Concertgebouw",
+      "city": "Amsterdam",
+      "country_code": "",
+      "country_name": "niederlande",
+      "url": "https://www.concertgebouw.nl/concerten/7605197-yuja-wang-speelt-ravels-pianoconcert-voor-de-linkerhand",
+      "detected_at": "2026-03-07T09:08:11.561930+00:00"
+    },
+    "cd2160091215e83862b8": {
+      "date": "March 19, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Berliner Philharmonie",
+      "city": "Berlin",
+      "country_code": "",
+      "country_name": "germany",
+      "url": "https://www.berliner-philharmoniker.de/en/concert/calendar/56705/",
+      "detected_at": "2026-03-07T09:08:11.561936+00:00"
+    },
+    "540f0def6b7d409c02b0": {
+      "date": "March 20, 2026",
+      "title": "Swedish Radio Symphony Orchestra",
+      "venue": "Bozar",
+      "city": "Brussels",
+      "country_code": "",
+      "country_name": "belgium",
+      "url": "https://www.bozar.be/en/calendar/swedish-radio-symphony-orchestra-salonen-wang",
+      "detected_at": "2026-03-07T09:08:11.561941+00:00"
+    },
+    "3da758de7b95b68645eb": {
+      "date": "April 23, 2026",
+      "title": "Mahler Chamber Orchestra",
+      "venue": "Granada Theatre",
+      "city": "Santa Barbara",
+      "country_code": "",
+      "country_name": "united states",
+      "url": "https://artsandlectures.ucsb.edu/events-tickets/events/25-26/yuja-wang-and-mahler-chamber-orchestra/",
+      "detected_at": "2026-03-07T09:08:11.561949+00:00"
+    },
+    "2cb509e04e19baa69feb": {
+      "date": "May 23 -24, 2026",
+      "title": "Münchner Philharmoniker",
+      "venue": "Philharmonie am Gasteig",
+      "city": "Munich",
+      "country_code": "",
+      "country_name": "germany",
+      "url": "https://tickets.muenchenticket.de/shop/142/link/event/432328?language=2",
+      "detected_at": "2026-03-07T09:08:11.561955+00:00"
     }
   },
   "dudamel": {
