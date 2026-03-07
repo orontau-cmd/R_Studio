@@ -135,16 +135,22 @@ def is_european(country_code: str, country_name: str, raw_text: str = "") -> boo
     Checks (in order):
     1. ISO country code
     2. Explicit country name in the structured fields
-    3. Full-text scan of raw_text for country and city names
+    3. Full-text scan of raw_text for city names (only when no country info available)
     """
     if country_code and country_code.upper() in EUROPE_COUNTRY_CODES:
         return True
-    search = (country_name + " " + raw_text).lower()
+    cn_lower = country_name.lower()
     for name in EUROPE_COUNTRY_NAMES:
-        if name in search:
+        if name in cn_lower:
             return True
+    # If we already have country info and it didn't match, it's not European.
+    # Skip city-name scan to avoid false positives (e.g. "Granada Theatre" in the US
+    # matching the city of Granada, Spain).
+    if country_name:
+        return False
+    raw_lower = raw_text.lower()
     for city in EUROPE_CITY_NAMES:
-        if city in search:
+        if city in raw_lower:
             return True
     return False
 
