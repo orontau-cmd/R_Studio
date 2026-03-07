@@ -1,6 +1,7 @@
 === Concert Notification Service ===
-Run time: 2026-03-07T09:08:04.725284+00:00
+Run time: 2026-03-07T10:03:27.466948+00:00
 
+Warning: corrupt state file – starting fresh.
 
 Checking Yuja Wang …
   Loading https://yujawang.com/calendar/ …
@@ -9,16 +10,7 @@ Checking Yuja Wang …
     Selector '.gw-gopf-isotope-item': 21 item(s)
     First item text: 'March 5 - 7, 2026\nSanta Cecilia Hall\nThe Orchestra dell’Accademia Nazionale di Santa Cecilia\nRome, Italy\nBarber Piano Concerto op. 38\nEric Jacobson, conductor\n--\nProkofiev Piano Concerto n. 2\nYuja Wan'
   Total concerts found: 21
-  European concerts: 9
-  NEW: March 5 - 7, 2026 | Santa Cecilia Hall, Rome
-  NEW: March 12 - 13, 2026 | Berwaldhallen, Stockholm
-  NEW: March, 15, 2026 | Philharmonie, Köln
-  NEW: March 16, 2026 | Elbphilharmonie, Hamburg
-  NEW: March 17, 2026 | Concertgebouw, Amsterdam
-  NEW: March 19, 2026 | Berliner Philharmonie, Berlin
-  NEW: March 20, 2026 | Bozar, Brussels
-  NEW: April 23, 2026 | Granada Theatre, Santa Barbara
-  NEW: May 23 -24, 2026 | Philharmonie am Gasteig, Munich
+  European concerts: 7
 
 Checking Gustavo Dudamel …
   Loading https://www.gustavodudamel.com/schedule …
@@ -28,9 +20,8 @@ Checking Gustavo Dudamel …
     First item text: 'MARCH 7, 2026\nLos Angeles Philharmonic\n\nWalt Disney Concert Hall\n\nMORE INFO\n\nThe Great Wall of Los Angeles\n\nCo-composition by Juhi Bansal, Nicolás Lell Benavides, Viet Cuong, Xavier Muzik, Estevan Olm'
   Total concerts found: 20
   European concerts: 1
-  Known: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
 
-Found 9 new European concert(s). Sending email…
-Email sent → oronroi@gmail.com
+First run: state populated. No email sent.
+Future runs will alert on new additions.
 
 Done.
