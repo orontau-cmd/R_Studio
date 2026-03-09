@@ -1,5 +1,5 @@
 === Concert Notification Service ===
-Run time: 2026-03-08T08:59:57.470043+00:00
+Run time: 2026-03-09T10:31:02.407729+00:00
 
 
 Checking Yuja Wang …
@@ -22,9 +22,9 @@ Checking Gustavo Dudamel …
   Loading https://www.gustavodudamel.com/schedule …
   Page title: Schedule
   JSON-LD events found: 0
-    Selector '.schedule-list8_item': 20 item(s)
-    First item text: 'MARCH 7, 2026\nLos Angeles Philharmonic\n\nWalt Disney Concert Hall\n\nMORE INFO\n\nThe Great Wall of Los Angeles\n\nCo-composition by Juhi Bansal, Nicolás Lell Benavides, Viet Cuong, Xavier Muzik, Estevan Olm'
-  Total concerts found: 20
+    Selector '.schedule-list8_item': 19 item(s)
+    First item text: 'MARCH 5-6 & 8, 2026\nLos Angeles Philharmonic\n\nWalt Disney Concert Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 6 "Pastorale"\n\n\u200d\n\nADES\n\nInferno (LA Phil Commission)'
+  Total concerts found: 19
   European concerts: 1
   Known: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
 
