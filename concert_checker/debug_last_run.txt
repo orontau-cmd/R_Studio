@@ -1,16 +1,15 @@
 === Concert Notification Service ===
-Run time: 2026-03-09T10:31:02.407729+00:00
+Run time: 2026-03-10T10:05:36.886516+00:00
 
 
 Checking Yuja Wang …
   Loading https://yujawang.com/calendar/ …
   Page title: Yuja Wang: Concert Calendar Schedule
   JSON-LD events found: 0
-    Selector '.gw-gopf-isotope-item': 21 item(s)
-    First item text: 'March 5 - 7, 2026\nSanta Cecilia Hall\nThe Orchestra dell’Accademia Nazionale di Santa Cecilia\nRome, Italy\nBarber Piano Concerto op. 38\nEric Jacobson, conductor\n--\nProkofiev Piano Concerto n. 2\nYuja Wan'
-  Total concerts found: 21
-  European concerts: 7
-  Known: March 5 - 7, 2026 | Santa Cecilia Hall, Rome
+    Selector '.gw-gopf-isotope-item': 20 item(s)
+    First item text: 'March 12 - 13, 2026\nBerwaldhallen\nSwedish Radio Symphony Orchestra\nStockholm, Sweden\nEsa-Pekka Salonen, conductor\n\nRAUTAVAARA: Piano Concerto No. 1\n\nRAVEL: Piano Concerto for the Left Hand\nTICKETS'
+  Total concerts found: 20
+  European concerts: 6
   Known: March 12 - 13, 2026 | Berwaldhallen, Stockholm
   Known: March, 15, 2026 | Philharmonie, Köln
   Known: March 16, 2026 | Elbphilharmonie, Hamburg
@@ -22,9 +21,9 @@ Checking Gustavo Dudamel …
   Loading https://www.gustavodudamel.com/schedule …
   Page title: Schedule
   JSON-LD events found: 0
-    Selector '.schedule-list8_item': 19 item(s)
-    First item text: 'MARCH 5-6 & 8, 2026\nLos Angeles Philharmonic\n\nWalt Disney Concert Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 6 "Pastorale"\n\n\u200d\n\nADES\n\nInferno (LA Phil Commission)'
-  Total concerts found: 19
+    Selector '.schedule-list8_item': 18 item(s)
+    First item text: 'MARCH 12-14 & 17, 2026\nNew York Philharmonic\n\nDavid Geffen Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 3 Eroica\n\n\u200d\n\nRZEWSKI\n\nThe People United Will Never Be Defeated (orch. var.)\n\nAdditional Information T'
+  Total concerts found: 18
   European concerts: 1
   Known: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
 
