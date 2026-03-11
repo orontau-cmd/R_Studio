@@ -81,6 +81,16 @@
       "country_name": "",
       "url": "https://www.salzburgerfestspiele.at/en/p/auferstehung-vienna-philharmonic-dudamel-2026",
       "detected_at": "2026-03-07T10:03:41.177318+00:00"
+    },
+    "a20f3e9a54440a104967": {
+      "date": "JUNE 9-12, 2027",
+      "title": "JUNE 9-12, 2027",
+      "venue": "David Geffen Hall",
+      "city": "",
+      "country_code": "",
+      "country_name": "",
+      "url": "https://www.gustavodudamel.com/schedule/#",
+      "detected_at": "2026-03-11T10:07:43.221329+00:00"
     }
   }
 }

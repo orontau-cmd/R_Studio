@@ -1,5 +1,5 @@
 === Concert Notification Service ===
-Run time: 2026-03-10T10:05:36.886516+00:00
+Run time: 2026-03-11T10:07:29.512243+00:00
 
 
 Checking Yuja Wang …
@@ -21,12 +21,14 @@ Checking Gustavo Dudamel …
   Loading https://www.gustavodudamel.com/schedule …
   Page title: Schedule
   JSON-LD events found: 0
-    Selector '.schedule-list8_item': 18 item(s)
+    Selector '.schedule-list8_item': 33 item(s)
     First item text: 'MARCH 12-14 & 17, 2026\nNew York Philharmonic\n\nDavid Geffen Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 3 Eroica\n\n\u200d\n\nRZEWSKI\n\nThe People United Will Never Be Defeated (orch. var.)\n\nAdditional Information T'
-  Total concerts found: 18
-  European concerts: 1
+  Total concerts found: 33
+  European concerts: 2
   Known: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
+  NEW: JUNE 9-12, 2027 | David Geffen Hall, 
 
-No new European concerts found. No email sent.
+Found 1 new European concert(s). Sending email…
+Email sent → oronroi@gmail.com
 
 Done.
