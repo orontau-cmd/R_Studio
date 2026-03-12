@@ -91,6 +91,36 @@
       "country_name": "",
       "url": "https://www.gustavodudamel.com/schedule/#",
       "detected_at": "2026-03-11T10:07:43.221329+00:00"
+    },
+    "1151fa7d17651e8db8c0": {
+      "date": "AUGUST 14, 2026",
+      "title": "AUGUST 14, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "",
+      "country_code": "",
+      "country_name": "",
+      "url": "https://www.eif.co.uk/events/beethoven-7-ortiz",
+      "detected_at": "2026-03-12T10:07:09.870034+00:00"
+    },
+    "43f3d4cf69f09c2f5c92": {
+      "date": "AUGUST 15, 2026",
+      "title": "AUGUST 15, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "",
+      "country_code": "",
+      "country_name": "",
+      "url": "https://www.eif.co.uk/events/beethoven-6-ad%C3%A8s",
+      "detected_at": "2026-03-12T10:07:09.870052+00:00"
+    },
+    "3a72db7c491726ec77fd": {
+      "date": "AUGUST 16, 2026",
+      "title": "AUGUST 16, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "",
+      "country_code": "",
+      "country_name": "",
+      "url": "https://www.eif.co.uk/events/up-late-with-mark-oconnor",
+      "detected_at": "2026-03-12T10:07:09.870059+00:00"
     }
   }
 }
