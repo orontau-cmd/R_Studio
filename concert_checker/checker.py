@@ -111,23 +111,88 @@ EUROPE_COUNTRY_NAMES: set[str] = {
 }
 
 # Major European cities for detection when only a city name appears (no country)
-EUROPE_CITY_NAMES: set[str] = {
-    "amsterdam", "antwerp", "athens", "barcelona", "berlin", "bern",
-    "bilbao", "bologna", "bordeaux", "bratislava", "brussels", "bucharest",
-    "budapest", "cologne", "copenhagen", "dresden", "dublin", "düsseldorf",
-    "edinburgh", "florence", "frankfurt", "geneva", "granada", "hamburg",
-    "helsinki", "istanbul", "krakow", "lausanne", "leipzig", "lisbon",
-    "ljubljana", "london", "luxembourg", "lyon", "madrid", "marseille",
-    "milan", "munich", "nice", "oslo", "paris", "prague", "reykjavik",
-    "riga", "rome", "rotterdam", "salzburg", "sarajevo", "seville",
-    "sofia", "stockholm", "strasbourg", "tallinn", "toulouse", "venice",
-    "vienna", "vilnius", "warsaw", "zagreb", "zurich",
+# Maps city name → (display name, country_name)
+EUROPE_CITY_COUNTRY: dict[str, tuple[str, str]] = {
+    "amsterdam":   ("Amsterdam",   "netherlands"),
+    "antwerp":     ("Antwerp",     "belgium"),
+    "athens":      ("Athens",      "greece"),
+    "barcelona":   ("Barcelona",   "spain"),
+    "berlin":      ("Berlin",      "germany"),
+    "bern":        ("Bern",        "switzerland"),
+    "bilbao":      ("Bilbao",      "spain"),
+    "bologna":     ("Bologna",     "italy"),
+    "bordeaux":    ("Bordeaux",    "france"),
+    "bratislava":  ("Bratislava",  "slovakia"),
+    "brussels":    ("Brussels",    "belgium"),
+    "bucharest":   ("Bucharest",   "romania"),
+    "budapest":    ("Budapest",    "hungary"),
+    "cologne":     ("Cologne",     "germany"),
+    "copenhagen":  ("Copenhagen",  "denmark"),
+    "dresden":     ("Dresden",     "germany"),
+    "dublin":      ("Dublin",      "ireland"),
+    "düsseldorf":  ("Düsseldorf",  "germany"),
+    "edinburgh":   ("Edinburgh",   "scotland"),
+    "florence":    ("Florence",    "italy"),
+    "frankfurt":   ("Frankfurt",   "germany"),
+    "geneva":      ("Geneva",      "switzerland"),
+    "granada":     ("Granada",     "spain"),
+    "hamburg":     ("Hamburg",     "germany"),
+    "helsinki":    ("Helsinki",    "finland"),
+    "istanbul":    ("Istanbul",    "turkey"),
+    "krakow":      ("Krakow",      "poland"),
+    "lausanne":    ("Lausanne",    "switzerland"),
+    "leipzig":     ("Leipzig",     "germany"),
+    "lisbon":      ("Lisbon",      "portugal"),
+    "ljubljana":   ("Ljubljana",   "slovenia"),
+    "london":      ("London",      "united kingdom"),
+    "luxembourg":  ("Luxembourg",  "luxembourg"),
+    "lyon":        ("Lyon",        "france"),
+    "madrid":      ("Madrid",      "spain"),
+    "marseille":   ("Marseille",   "france"),
+    "milan":       ("Milan",       "italy"),
+    "munich":      ("Munich",      "germany"),
+    "nice":        ("Nice",        "france"),
+    "oslo":        ("Oslo",        "norway"),
+    "paris":       ("Paris",       "france"),
+    "prague":      ("Prague",      "czech republic"),
+    "reykjavik":   ("Reykjavik",   "iceland"),
+    "riga":        ("Riga",        "latvia"),
+    "rome":        ("Rome",        "italy"),
+    "rotterdam":   ("Rotterdam",   "netherlands"),
+    "salzburg":    ("Salzburg",    "austria"),
+    "sarajevo":    ("Sarajevo",    "bosnia and herzegovina"),
+    "seville":     ("Seville",     "spain"),
+    "sofia":       ("Sofia",       "bulgaria"),
+    "stockholm":   ("Stockholm",   "sweden"),
+    "strasbourg":  ("Strasbourg",  "france"),
+    "tallinn":     ("Tallinn",     "estonia"),
+    "toulouse":    ("Toulouse",    "france"),
+    "venice":      ("Venice",      "italy"),
+    "vienna":      ("Vienna",      "austria"),
+    "vilnius":     ("Vilnius",     "lithuania"),
+    "warsaw":      ("Warsaw",      "poland"),
+    "zagreb":      ("Zagreb",      "croatia"),
+    "zurich":      ("Zurich",      "switzerland"),
 }
+
+EUROPE_CITY_NAMES: set[str] = set(EUROPE_CITY_COUNTRY.keys())
 
 
 # ---------------------------------------------------------------------------
 # European location detection
 # ---------------------------------------------------------------------------
+
+def infer_city_country(raw_text: str) -> tuple[str, str]:
+    """
+    Scan raw_text for a known European city name and return
+    (display_city, country_name). Returns ("", "") if nothing found.
+    """
+    raw_lower = raw_text.lower()
+    for city_key, (city_display, country) in EUROPE_CITY_COUNTRY.items():
+        if city_key in raw_lower:
+            return city_display, country
+    return "", ""
+
 
 def is_european(country_code: str, country_name: str, raw_text: str = "") -> bool:
     """Return True if the location is in Europe.
@@ -436,6 +501,16 @@ async def check_all() -> tuple[list[dict], bool]:
         print(f"  European concerts: {len(european)}")
 
         for concert in european:
+            # Enrich missing city/country when detected via raw-text city scan
+            if not concert.get("city"):
+                inferred_city, inferred_country = infer_city_country(
+                    concert.get("raw_text", "")
+                )
+                if inferred_city:
+                    concert["city"] = inferred_city
+                if inferred_country and not concert.get("country_name"):
+                    concert["country_name"] = inferred_country
+
             cid = concert_id(
                 artist_key,
                 concert.get("date", ""),
