@@ -28,6 +28,8 @@ import json
 import os
 import smtplib
 import sys
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -110,87 +112,79 @@ EUROPE_COUNTRY_NAMES: set[str] = {
     "kosovo",
 }
 
-# Major European cities for detection when only a city name appears (no country)
-# Maps city name → (display name, country_name)
-EUROPE_CITY_COUNTRY: dict[str, tuple[str, str]] = {
-    "amsterdam":   ("Amsterdam",   "netherlands"),
-    "antwerp":     ("Antwerp",     "belgium"),
-    "athens":      ("Athens",      "greece"),
-    "barcelona":   ("Barcelona",   "spain"),
-    "berlin":      ("Berlin",      "germany"),
-    "bern":        ("Bern",        "switzerland"),
-    "bilbao":      ("Bilbao",      "spain"),
-    "bologna":     ("Bologna",     "italy"),
-    "bordeaux":    ("Bordeaux",    "france"),
-    "bratislava":  ("Bratislava",  "slovakia"),
-    "brussels":    ("Brussels",    "belgium"),
-    "bucharest":   ("Bucharest",   "romania"),
-    "budapest":    ("Budapest",    "hungary"),
-    "cologne":     ("Cologne",     "germany"),
-    "copenhagen":  ("Copenhagen",  "denmark"),
-    "dresden":     ("Dresden",     "germany"),
-    "dublin":      ("Dublin",      "ireland"),
-    "düsseldorf":  ("Düsseldorf",  "germany"),
-    "edinburgh":   ("Edinburgh",   "scotland"),
-    "florence":    ("Florence",    "italy"),
-    "frankfurt":   ("Frankfurt",   "germany"),
-    "geneva":      ("Geneva",      "switzerland"),
-    "granada":     ("Granada",     "spain"),
-    "hamburg":     ("Hamburg",     "germany"),
-    "helsinki":    ("Helsinki",    "finland"),
-    "istanbul":    ("Istanbul",    "turkey"),
-    "krakow":      ("Krakow",      "poland"),
-    "lausanne":    ("Lausanne",    "switzerland"),
-    "leipzig":     ("Leipzig",     "germany"),
-    "lisbon":      ("Lisbon",      "portugal"),
-    "ljubljana":   ("Ljubljana",   "slovenia"),
-    "london":      ("London",      "united kingdom"),
-    "luxembourg":  ("Luxembourg",  "luxembourg"),
-    "lyon":        ("Lyon",        "france"),
-    "madrid":      ("Madrid",      "spain"),
-    "marseille":   ("Marseille",   "france"),
-    "milan":       ("Milan",       "italy"),
-    "munich":      ("Munich",      "germany"),
-    "nice":        ("Nice",        "france"),
-    "oslo":        ("Oslo",        "norway"),
-    "paris":       ("Paris",       "france"),
-    "prague":      ("Prague",      "czech republic"),
-    "reykjavik":   ("Reykjavik",   "iceland"),
-    "riga":        ("Riga",        "latvia"),
-    "rome":        ("Rome",        "italy"),
-    "rotterdam":   ("Rotterdam",   "netherlands"),
-    "salzburg":    ("Salzburg",    "austria"),
-    "sarajevo":    ("Sarajevo",    "bosnia and herzegovina"),
-    "seville":     ("Seville",     "spain"),
-    "sofia":       ("Sofia",       "bulgaria"),
-    "stockholm":   ("Stockholm",   "sweden"),
-    "strasbourg":  ("Strasbourg",  "france"),
-    "tallinn":     ("Tallinn",     "estonia"),
-    "toulouse":    ("Toulouse",    "france"),
-    "venice":      ("Venice",      "italy"),
-    "vienna":      ("Vienna",      "austria"),
-    "vilnius":     ("Vilnius",     "lithuania"),
-    "warsaw":      ("Warsaw",      "poland"),
-    "zagreb":      ("Zagreb",      "croatia"),
-    "zurich":      ("Zurich",      "switzerland"),
+# Major European cities used to detect European concerts from raw text only.
+# Country resolution is handled dynamically via the Nominatim geocoding API.
+EUROPE_CITY_NAMES: set[str] = {
+    "amsterdam", "antwerp", "athens", "barcelona", "berlin", "bern",
+    "bilbao", "bologna", "bordeaux", "bratislava", "brussels", "bucharest",
+    "budapest", "cologne", "copenhagen", "dresden", "dublin", "düsseldorf",
+    "edinburgh", "florence", "frankfurt", "geneva", "granada", "hamburg",
+    "helsinki", "istanbul", "krakow", "lausanne", "leipzig", "lisbon",
+    "ljubljana", "london", "luxembourg", "lyon", "madrid", "marseille",
+    "milan", "munich", "nice", "oslo", "paris", "prague", "reykjavik",
+    "riga", "rome", "rotterdam", "salzburg", "sarajevo", "seville",
+    "sofia", "stockholm", "strasbourg", "tallinn", "toulouse", "venice",
+    "vienna", "vilnius", "warsaw", "zagreb", "zurich",
 }
 
-EUROPE_CITY_NAMES: set[str] = set(EUROPE_CITY_COUNTRY.keys())
+# Cache geocoding results to avoid repeated API calls within a run
+_geocode_cache: dict[str, tuple[str, str]] = {}
 
 
 # ---------------------------------------------------------------------------
 # European location detection
 # ---------------------------------------------------------------------------
 
+def _geocode_city(city: str) -> tuple[str, str]:
+    """
+    Look up a city via Nominatim (OpenStreetMap) and return
+    (display_city, country_name). Returns ("", "") on failure.
+    Results are cached for the lifetime of the process.
+    """
+    if city in _geocode_cache:
+        return _geocode_cache[city]
+
+    try:
+        params = urllib.parse.urlencode({"q": city, "format": "json", "limit": 1})
+        url = f"https://nominatim.openstreetmap.org/search?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": "concert-notification-service/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            results = json.loads(resp.read())
+        if results:
+            display = results[0].get("display_name", "").split(",")[0].strip()
+            country = results[0].get("address", {}).get("country", "").lower() if "address" in results[0] else ""
+            # Nominatim /search doesn't return address by default – use addressdetails=1
+            params2 = urllib.parse.urlencode({"q": city, "format": "json", "limit": 1, "addressdetails": 1})
+            req2 = urllib.request.Request(
+                f"https://nominatim.openstreetmap.org/search?{params2}",
+                headers={"User-Agent": "concert-notification-service/1.0"},
+            )
+            with urllib.request.urlopen(req2, timeout=5) as resp2:
+                results2 = json.loads(resp2.read())
+            if results2:
+                addr = results2[0].get("address", {})
+                display = (addr.get("city") or addr.get("town") or addr.get("village") or city).strip()
+                country = addr.get("country", "").lower()
+            result = (display, country)
+        else:
+            result = ("", "")
+    except Exception as exc:
+        print(f"  Warning: geocoding '{city}' failed: {exc}")
+        result = ("", "")
+
+    _geocode_cache[city] = result
+    return result
+
+
 def infer_city_country(raw_text: str) -> tuple[str, str]:
     """
-    Scan raw_text for a known European city name and return
-    (display_city, country_name). Returns ("", "") if nothing found.
+    Scan raw_text for a known European city name, then resolve its country
+    via the Nominatim geocoding API. Returns ("", "") if nothing found.
     """
     raw_lower = raw_text.lower()
-    for city_key, (city_display, country) in EUROPE_CITY_COUNTRY.items():
+    for city_key in EUROPE_CITY_NAMES:
         if city_key in raw_lower:
-            return city_display, country
+            return _geocode_city(city_key)
     return "", ""
 
 
