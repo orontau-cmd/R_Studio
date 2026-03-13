@@ -1,5 +1,5 @@
 === Concert Notification Service ===
-Run time: 2026-03-12T10:06:53.116387+00:00
+Run time: 2026-03-13T09:59:28.618352+00:00
 
 
 Checking Yuja Wang …
@@ -25,13 +25,13 @@ Checking Gustavo Dudamel …
     First item text: 'MARCH 12-14 & 17, 2026\nNew York Philharmonic\n\nDavid Geffen Hall\n\nMORE INFO\nBEETHOVEN\n\nSymphony No. 3 Eroica\n\n\u200d\n\nRZEWSKI\n\nThe People United Will Never Be Defeated (orch. var.)\n\nAdditional Information T'
   Total concerts found: 36
   European concerts: 5
-  Known: JULY 25 & 27, 2026 | Grosses Festspielhaus, 
-  NEW: AUGUST 14, 2026 | Edinburgh International Festival, 
-  NEW: AUGUST 15, 2026 | Edinburgh International Festival, 
-  NEW: AUGUST 16, 2026 | Edinburgh International Festival, 
-  Known: JUNE 9-12, 2027 | David Geffen Hall, 
+  NEW: JULY 25 & 27, 2026 | Grosses Festspielhaus, Wien
+  NEW: AUGUST 14, 2026 | Edinburgh International Festival, City of Edinburgh
+  NEW: AUGUST 15, 2026 | Edinburgh International Festival, City of Edinburgh
+  NEW: AUGUST 16, 2026 | Edinburgh International Festival, City of Edinburgh
+  NEW: JUNE 9-12, 2027 | David Geffen Hall, Bern
 
-Found 3 new European concert(s). Sending email…
+Found 5 new European concert(s). Sending email…
 Email sent → oronroi@gmail.com
 
 Done.

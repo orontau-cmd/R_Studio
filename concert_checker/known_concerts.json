@@ -121,6 +121,56 @@
       "country_name": "",
       "url": "https://www.eif.co.uk/events/up-late-with-mark-oconnor",
       "detected_at": "2026-03-12T10:07:09.870059+00:00"
+    },
+    "3cc2b199ec3b2c596d09": {
+      "date": "JULY 25 & 27, 2026",
+      "title": "JULY 25 & 27, 2026",
+      "venue": "Grosses Festspielhaus",
+      "city": "Wien",
+      "country_code": "",
+      "country_name": "österreich",
+      "url": "https://www.salzburgerfestspiele.at/en/p/auferstehung-vienna-philharmonic-dudamel-2026",
+      "detected_at": "2026-03-13T09:59:42.930667+00:00"
+    },
+    "0007966c377323a1f19b": {
+      "date": "AUGUST 14, 2026",
+      "title": "AUGUST 14, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "City of Edinburgh",
+      "country_code": "",
+      "country_name": "united kingdom",
+      "url": "https://www.eif.co.uk/events/beethoven-7-ortiz",
+      "detected_at": "2026-03-13T09:59:43.540991+00:00"
+    },
+    "c96e0ab54494dfe195f1": {
+      "date": "AUGUST 15, 2026",
+      "title": "AUGUST 15, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "City of Edinburgh",
+      "country_code": "",
+      "country_name": "united kingdom",
+      "url": "https://www.eif.co.uk/events/beethoven-6-ad%C3%A8s",
+      "detected_at": "2026-03-13T09:59:43.541042+00:00"
+    },
+    "4ccc029bfd513fcb87b1": {
+      "date": "AUGUST 16, 2026",
+      "title": "AUGUST 16, 2026",
+      "venue": "Edinburgh International Festival",
+      "city": "City of Edinburgh",
+      "country_code": "",
+      "country_name": "united kingdom",
+      "url": "https://www.eif.co.uk/events/up-late-with-mark-oconnor",
+      "detected_at": "2026-03-13T09:59:43.541064+00:00"
+    },
+    "046e13ea79e41609fd0d": {
+      "date": "JUNE 9-12, 2027",
+      "title": "JUNE 9-12, 2027",
+      "venue": "David Geffen Hall",
+      "city": "Bern",
+      "country_code": "",
+      "country_name": "schweiz/suisse/svizzera/svizra",
+      "url": "https://www.gustavodudamel.com/schedule/#",
+      "detected_at": "2026-03-13T09:59:44.215405+00:00"
     }
   }
 }
