@@ -57,7 +57,18 @@ jobs:
         run: python concert_checker/checker.py
 
       # -----------------------------------------------------------------------
-      # 5. Commit updated state back to the repo
+      # 5. Upload debug log as artifact (runs even on failure for post-mortem)
+      # -----------------------------------------------------------------------
+      - name: Upload debug log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-log
+          path: concert_checker/debug_last_run.txt
+          if-no-files-found: ignore
+
+      # -----------------------------------------------------------------------
+      # 6. Commit updated state back to the repo
       #    The [skip ci] tag prevents this commit from re-triggering the workflow.
       # -----------------------------------------------------------------------
       - name: Commit updated concert state
