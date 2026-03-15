@@ -68,17 +68,17 @@ jobs:
           if-no-files-found: ignore
 
       # -----------------------------------------------------------------------
-      # 6. Commit updated state back to the repo
-      #    The [skip ci] tag prevents this commit from re-triggering the workflow.
+      # 6. Commit debug log + state back to repo (always, for post-mortem access)
       # -----------------------------------------------------------------------
       - name: Commit updated concert state
+        if: always()
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add concert_checker/known_concerts.json concert_checker/debug_last_run.txt
           if git diff --staged --quiet; then
-            echo "No changes to known_concerts.json – nothing to commit."
+            echo "No changes to commit."
           else
-            git commit -m "chore: update known concerts state [skip ci]"
+            git commit -m "chore: update concert state / debug log [skip ci]"
             git push origin ${{ github.ref_name }}
           fi
